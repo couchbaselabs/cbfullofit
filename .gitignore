@@ -1,0 +1,11 @@
+#*
+*.sublime-*
+*~
+.#*
+.project
+.settings
+.DS_Store
+/analysis/examples/tokenize_input/tokenize_input
+/index/upside_down/utils/dump/dump
+/data
+/cbfullofit

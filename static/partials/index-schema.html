@@ -1,0 +1,46 @@
+<h3>Index {{theindex.name}}</h3>
+
+<ul id="tabs" class="nav nav-tabs">
+	<li class="active"><a href="/index/{{theindex.name}}/schema" >Schema</a></li>
+	<li><a href="/index/{{theindex.name}}/indexers" >Indexers</a></li>
+	<li><a href="/index/{{theindex.name}}/search" >Search</a></li>
+	<li><a href="/index/{{theindex.name}}/booleanSearch" >Boolean Search</a></li>
+</ul>
+<p>
+<form class="form-horizontal" role="form">
+	<div class="form-group">
+		<label for="inputName" class="col-sm-2 control-label">Name</label>
+		<div class="col-sm-10">
+			<input ng-model="theindex.name" type="text" class="form-control" id="inputName" placeholder="Name" disabled="true">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="inputBucket" class="col-sm-2 control-label">Bucket</label>
+		<div class="col-sm-10">
+			<select ng-model="theindex.bucket" id="inputBucket" class="form-control" disabled="true">
+				<option>{{theindex.bucket}}</option>
+			</select>
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="inputNone" class="col-sm-2 control-label">Schema</label>
+		<div class="col-sm-10">
+			<table class="table">
+				<thead>
+					<tr>
+						<th style="width: 35%">Name</th>
+						<th style="width: 35%">Path</th>
+						<th style="width: 15%">Analyzer</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="(fn, field) in theindex.schema">
+						<td>{{fn}}</td>
+						<td>{{field.path}}</td>
+						<td>{{field.analyzer}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</form>

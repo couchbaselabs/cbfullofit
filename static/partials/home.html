@@ -1,0 +1,22 @@
+<h3>Fulltext Indexes</h3>
+
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th></th>
+      </thead>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="index in indexes">
+      <td><a href="/index/{{index}}/schema">{{index}}</a></td>
+      <td><button type="button" class="btn btn-default pull-right" ng-click="deleteIndex(index)"><span class="glyphicon glyphicon-remove"></span></button></d>
+    </tr>
+  </tbody>
+</table>
+
+<a type="button" class="btn btn-primary pull-right" href="/index">
+  <span class="glyphicon glyphicon-plus"></span> New Index
+</a>

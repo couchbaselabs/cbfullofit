@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" ng-app="myApp">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <title>cbfullofit</title>
+  <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+  <link href="/static/css/app.css" rel="stylesheet"/>
+  <link href="/static/img/deadheat.ico" rel="icon"/>
+</head>
+<body>
+
+    <!-- Wrap all page content here -->
+    <div id="wrap">
+
+      <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+          <div class="navbar-header">
+            <a id="custom-brand" class="navbar-brand" href="/">cbfull<span id="logo" class="glyphicon glyphicon-search small"></span>fit</a>
+          </div>
+          <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+              <li><a href="/">Indexes</a></li>
+              <li><a href="/node">Nodes</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    <div class="container app">
+      <div ng-view></div>
+    </div>
+
+  </div>
+
+      <hr>
+
+      <footer>
+        <p>Copyright &copy; 2013 Couchbase, Inc. All rights reserved.</p>
+      </footer>
+
+    </div>
+  <script src="/static/js/jquery-1.10.2.min.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/js/jquery-ui.min.js"></script>
+  <script src="/static/lib/angular/angular.js"></script>
+  <script src="/static/lib/angular/angular-route.js"></script>
+  <script src="/static/lib/angular/angular-sanitize.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/services.js"></script>
+  <script src="/static/js/controllers.js"></script>
+  <script src="/static/js/filters.js"></script>
+  <script src="/static/js/directives.js"></script>
+  <script src="/static/js/indexes.js"></script>
+  <script src="/static/js/nodes.js"></script>
+</body>
+</html>
