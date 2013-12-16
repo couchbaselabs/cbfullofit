@@ -26,7 +26,13 @@ type Indexer struct {
 func NewIndexer(indexName string, bucket string, schema map[string]Field) *Indexer {
 	usdschema := make([]*index.Field, 0)
 	for fn, f := range schema {
-		usdschema = append(usdschema, &index.Field{fn, f.Path, f.Analyzer})
+		usdschema = append(usdschema,
+			&index.Field{
+				Name:     fn,
+				Path:     f.Path,
+				Analyzer: f.Analyzer,
+			},
+		)
 	}
 	return &Indexer{
 		name:   indexName,

@@ -20,7 +20,13 @@ import (
 func TestIndexOpenReopen(t *testing.T) {
 	defer os.RemoveAll("test")
 
-	schema := []*index.Field{&index.Field{"name", "/name", "standard"}}
+	schema := []*index.Field{
+		&index.Field{
+			Name:     "name",
+			Path:     "/name",
+			Analyzer: "standard",
+		},
+	}
 	idx := NewUpsideDownCouch("test", schema)
 
 	err := idx.Open()
@@ -45,7 +51,13 @@ func TestIndexOpenReopen(t *testing.T) {
 	idx.Close()
 
 	// create a new instance with a different schema
-	newSchema := []*index.Field{&index.Field{"desc", "/desc", "keyword"}}
+	newSchema := []*index.Field{
+		&index.Field{
+			Name:     "desc",
+			Path:     "/desc",
+			Analyzer: "keyword",
+		},
+	}
 	idx = NewUpsideDownCouch("test", newSchema)
 	err = idx.Open()
 	if err != nil {
@@ -64,7 +76,13 @@ func TestIndexOpenReopen(t *testing.T) {
 func TestIndexInsert(t *testing.T) {
 	defer os.RemoveAll("test")
 
-	schema := []*index.Field{&index.Field{"name", "/name", "standard"}}
+	schema := []*index.Field{
+		&index.Field{
+			Name:     "name",
+			Path:     "/name",
+			Analyzer: "standard",
+		},
+	}
 	idx := NewUpsideDownCouch("test", schema)
 
 	err := idx.Open()
@@ -102,7 +120,13 @@ func TestIndexInsert(t *testing.T) {
 func TestIndexInsertThenDelete(t *testing.T) {
 	defer os.RemoveAll("test")
 
-	schema := []*index.Field{&index.Field{"name", "/name", "standard"}}
+	schema := []*index.Field{
+		&index.Field{
+			Name:     "name",
+			Path:     "/name",
+			Analyzer: "standard",
+		},
+	}
 	idx := NewUpsideDownCouch("test", schema)
 
 	err := idx.Open()
@@ -131,7 +155,7 @@ func TestIndexInsertThenDelete(t *testing.T) {
 
 	err = idx.Delete([]byte{'1'})
 	if err != nil {
-		t.Error("Error deleting entry from index: %v", err)
+		t.Errorf("Error deleting entry from index: %v", err)
 	}
 	expectedCount -= 1
 
@@ -151,7 +175,13 @@ func TestIndexInsertThenDelete(t *testing.T) {
 func TestIndexInsertThenUpdate(t *testing.T) {
 	defer os.RemoveAll("test")
 
-	schema := []*index.Field{&index.Field{"name", "/name", "standard"}}
+	schema := []*index.Field{
+		&index.Field{
+			Name:     "name",
+			Path:     "/name",
+			Analyzer: "standard",
+		},
+	}
 	idx := NewUpsideDownCouch("test", schema)
 
 	err := idx.Open()
@@ -170,7 +200,7 @@ func TestIndexInsertThenUpdate(t *testing.T) {
 	doc = []byte(`{"name": "test fail"}`)
 	err = idx.Update([]byte{'1'}, doc)
 	if err != nil {
-		t.Error("Error deleting entry from index: %v", err)
+		t.Errorf("Error deleting entry from index: %v", err)
 	}
 
 	// should have 2 row (1 for version, 1 for schema field, and 2 for the two term, and 2 for the term counts, and 1 for the back index entry)
@@ -184,7 +214,7 @@ func TestIndexInsertThenUpdate(t *testing.T) {
 	doc = []byte(`{"name": "fail"}`)
 	err = idx.Update([]byte{'1'}, doc)
 	if err != nil {
-		t.Error("Error deleting entry from index: %v", err)
+		t.Errorf("Error deleting entry from index: %v", err)
 	}
 
 	// should have 2 row (1 for version, 1 for schema field, and 1 for the remaining term, and 1 for the term count, and 1 for the back index entry)
@@ -198,7 +228,13 @@ func TestIndexInsertThenUpdate(t *testing.T) {
 func TestIndexInsertMultiple(t *testing.T) {
 	defer os.RemoveAll("test")
 
-	schema := []*index.Field{&index.Field{"name", "/name", "standard"}}
+	schema := []*index.Field{
+		&index.Field{
+			Name:     "name",
+			Path:     "/name",
+			Analyzer: "standard",
+		},
+	}
 	idx := NewUpsideDownCouch("test", schema)
 
 	err := idx.Open()

@@ -161,7 +161,7 @@ func (udc *UpsideDownCouch) batchRows(addRows []UpsideDownCouchRow, updateRows [
 				tr = ParseFromKeyValue(tr.Key(), val).(*TermFrequencyRow)
 				tr.freq -= 1 // incr
 			} else {
-				log.Panic("unexpected missing row, deleting term, expected count row to exit: %v", tr.Key())
+				log.Panic(fmt.Sprintf("unexpected missing row, deleting term, expected count row to exit: %v", tr.Key()))
 			}
 
 			if tr.freq == 0 {

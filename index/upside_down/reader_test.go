@@ -18,7 +18,13 @@ import (
 func TestIndexReader(t *testing.T) {
 	defer os.RemoveAll("test")
 
-	schema := []*index.Field{&index.Field{"name", "/name", "standard"}}
+	schema := []*index.Field{
+		&index.Field{
+			Name:     "name",
+			Path:     "/name",
+			Analyzer: "standard",
+		},
+	}
 	idx := NewUpsideDownCouch("test", schema)
 
 	err := idx.Open()
