@@ -119,12 +119,14 @@ func (s *TermDisjunctionSearcher) Next() (*DocumentMatch, error) {
 			}
 		}
 
-		if len(matching) > int(s.min) {
+		if len(matching) >= int(s.min) {
 			found = true
 			// score this match
 			rv = s.scorer.Score(matching, len(matching), len(s.searchers))
 		}
 
+		// reset matching
+		matching = make([]*DocumentMatch, 0)
 		// invoke next on all the matching searchers
 		for i, curr := range s.currs {
 			if curr != nil && curr.ID == s.currentId {
