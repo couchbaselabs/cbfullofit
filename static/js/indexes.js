@@ -127,6 +127,11 @@ function NewIndexCtrl($scope, $http, $log) {
 
 function IndexCtrl($scope, $http, $routeParams, $log) {
 
+	$scope.minShouldOptions = [];
+	for (var i = 0; i <= 50; i++) {
+		$scope.minShouldOptions[i] = i;
+	}
+
 	var resetSchema = function() {
 		$scope.clauseTerm = "";
 		$scope.clauseOccur = "MUST";
@@ -140,6 +145,7 @@ function IndexCtrl($scope, $http, $routeParams, $log) {
 	var resetForm = function() {
 		$scope.clauses = [];
 		$scope.size = "10";
+		$scope.minShould = "0";
 		resetSchema();
 	};
 
@@ -286,7 +292,7 @@ function IndexCtrl($scope, $http, $routeParams, $log) {
 					"terms":[],
 					"boost": 1.0,
 					"explain": true,
-					"min": 0
+					"min": parseInt($scope.minShould, 10)
 				},
 				"must_not": {
 					"terms": [],
