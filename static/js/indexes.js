@@ -281,6 +281,11 @@ function IndexCtrl($scope, $http, $routeParams, $log) {
 	};
 
 	$scope.searchBoolean = function() {
+		delete $scope.results;
+		if($scope.clauses.length < 1) {
+			$scope.errorMessage = "Query requires at least one clause";
+			return;
+		}
 		var requestBody = {
 			"query": {
 				"must": {
@@ -346,7 +351,8 @@ function IndexCtrl($scope, $http, $routeParams, $log) {
 			$scope.results.roundedTook = $scope.roundScore($scope.results.took);
 		}).
 		error(function(data, code) {
-
+			$scope.errorMessage = data;
+			return;
 		});
 	};
 }

@@ -252,13 +252,20 @@ func searchIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("query: %s", string(requestBody))
+
 	var sr SearchRequest
 	err = json.Unmarshal(requestBody, &sr)
 	if err != nil {
 		showError(w, r, fmt.Sprintf("error parsing query: %v", err), 500)
 		return
 	}
-	log.Printf("query: %#v", sr.Q)
+
+	err = sr.Q.Validate()
+	if err != nil {
+		showError(w, r, fmt.Sprintf("error validating query: %v", err), 500)
+		return
+	}
 
 	collector := search.NewTopScorerCollector(int(sr.Size))
 	searcher, err := sr.Q.Searcher(indexer.index)

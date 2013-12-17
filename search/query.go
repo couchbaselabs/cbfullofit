@@ -18,6 +18,7 @@ import (
 type Query interface {
 	GetBoost() float64
 	Searcher(index index.Index) (Searcher, error)
+	Validate() error
 }
 
 func ParseQuery(input []byte) (Query, error) {
@@ -37,7 +38,8 @@ func ParseQuery(input []byte) (Query, error) {
 	}
 	_, hasMust := tmp["must"]
 	_, hasShould := tmp["should"]
-	if hasMust || hasShould {
+	_, hasMustNot := tmp["must_not"]
+	if hasMust || hasShould || hasMustNot {
 		var rv *TermBooleanQuery
 		err := json.Unmarshal(input, &rv)
 		if err != nil {
@@ -61,6 +63,10 @@ func (q *TermQuery) GetBoost() float64 {
 
 func (q *TermQuery) Searcher(index index.Index) (Searcher, error) {
 	return NewTermSearcher(index, q)
+}
+
+func (q *TermQuery) Validate() error {
+	return nil
 }
 
 type TermConjunctionQuery struct {
@@ -100,6 +106,10 @@ func (q *TermConjunctionQuery) GetBoost() float64 {
 
 func (q *TermConjunctionQuery) Searcher(index index.Index) (Searcher, error) {
 	return NewTermConjunctionSearcher(index, q)
+}
+
+func (q *TermConjunctionQuery) Validate() error {
+	return nil
 }
 
 type TermDisjunctionQuery struct {
@@ -144,6 +154,13 @@ func (q *TermDisjunctionQuery) Searcher(index index.Index) (Searcher, error) {
 	return NewTermDisjunctionSearcher(index, q)
 }
 
+func (q *TermDisjunctionQuery) Validate() error {
+	if int(q.Min) > len(q.Terms) {
+		return fmt.Errorf("Minimum clauses in disjunction exceeds total number of clauses")
+	}
+	return nil
+}
+
 type TermBooleanQuery struct {
 	Must    *TermConjunctionQuery `json:"must,omitempty"`
 	MustNot *TermDisjunctionQuery `json:"must_not,omitempty"`
@@ -158,4 +175,14 @@ func (q *TermBooleanQuery) GetBoost() float64 {
 
 func (q *TermBooleanQuery) Searcher(index index.Index) (Searcher, error) {
 	return NewTermBooleanSearcher(index, q)
+}
+
+func (q *TermBooleanQuery) Validate() error {
+	if q.Must == nil && q.Should == nil {
+		return fmt.Errorf("Boolean query must contain at least one MUST or SHOULD clause")
+	}
+	if q.Must != nil && len(q.Must.Terms) == 0 && q.Should != nil && len(q.Should.Terms) == 0 {
+		return fmt.Errorf("Boolean query must contain at least one MUST or SHOULD clause")
+	}
+	return nil
 }
