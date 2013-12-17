@@ -57,11 +57,13 @@ func TestIndexReader(t *testing.T) {
 	if count != 0 {
 		t.Errorf("Expected doc count to be: %d got: %d", 0, count)
 	}
+	reader.Close()
 
 	reader, err = idx.TermFieldReader([]byte("test"), "name")
 	if err != nil {
 		t.Errorf("Error accessing term field reader: %v", err)
 	}
+	defer reader.Close()
 
 	expectedCount = 2
 	count = reader.Count()
