@@ -77,7 +77,11 @@ func (s *TermConjunctionSearcher) initSearchers() error {
 	}
 
 	if len(s.currs) > 0 {
-		s.currentId = s.currs[0].ID
+		if s.currs[0] != nil {
+			s.currentId = s.currs[0].ID
+		} else {
+			s.currentId = ""
+		}
 	}
 	return nil
 }
