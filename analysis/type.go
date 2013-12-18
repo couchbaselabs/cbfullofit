@@ -12,6 +12,10 @@ import (
 	"fmt"
 )
 
+type Sanitizer interface {
+	Sanitize([]byte) []byte
+}
+
 type Token struct {
 	Start    int
 	End      int
@@ -34,11 +38,15 @@ type TokenFilter interface {
 }
 
 type Analyzer struct {
+	Sanitizer Sanitizer
 	Tokenizer Tokenizer
 	Filters   []TokenFilter
 }
 
 func (a *Analyzer) Analyze(input []byte) TokenStream {
+	if a.Sanitizer != nil {
+		input = a.Sanitizer.Sanitize(input)
+	}
 	tokens := a.Tokenizer.Tokenize(input)
 	for _, filter := range a.Filters {
 		tokens = filter.Filter(tokens)
