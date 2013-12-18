@@ -315,7 +315,7 @@ function IndexCtrl($scope, $http, $routeParams, $log) {
 			var termQuery = {
 				"term": clause.term,
 				"field": clause.field,
-				"boost": clause.boost,
+				"boost": parseFloat(clause.boost),
 				"explain": true
 			};
 			switch(clause.occur) {
