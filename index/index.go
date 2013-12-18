@@ -24,10 +24,18 @@ type Index interface {
 	DocCount() uint64
 }
 
+type TermFieldVector struct {
+	Field string
+	Pos   uint64
+	Start uint64
+	End   uint64
+}
+
 type TermFieldDoc struct {
-	ID   string
-	Freq uint64
-	Norm float64
+	ID      string
+	Freq    uint64
+	Norm    float64
+	Vectors []*TermFieldVector
 }
 
 type TermFieldReader interface {
@@ -38,9 +46,10 @@ type TermFieldReader interface {
 }
 
 type Field struct {
-	Name     string
-	Path     string
-	Analyzer string
+	Name               string
+	Path               string
+	Analyzer           string
+	IncludeTermVectors bool
 }
 
 func (f *Field) String() string {

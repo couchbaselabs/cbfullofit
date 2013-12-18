@@ -19,8 +19,9 @@ import (
 )
 
 type mockFreq struct {
-	freq uint64
-	norm float64
+	freq    uint64
+	norm    float64
+	vectors []*index.TermFieldVector
 }
 
 // key doc id
@@ -88,7 +89,7 @@ func (index *MockIndex) Update(id []byte, doc []byte) error {
 	index.Delete(id)
 
 	backIndexEntry := make(mockBackIndexEntry, 0)
-	for _, field := range index.schema {
+	for fieldIndex, field := range index.schema {
 		fieldValue, err := jsonpointer.Find(doc, field.Path)
 		if err != nil {
 			return err
@@ -101,8 +102,11 @@ func (index *MockIndex) Update(id []byte, doc []byte) error {
 		tokenFreqs := analysis.TokenFrequency(tokens)
 		for _, tf := range tokenFreqs {
 			mf := mockFreq{
-				freq: tf.Freq,
+				freq: uint64(len(tf.Locations)),
 				norm: fieldNorm,
+			}
+			if field.IncludeTermVectors {
+				mf.vectors = index.mockVectorsFromTokenFreq(uint16(fieldIndex), tf)
 			}
 			termString := string(tf.Term)
 			fieldMap, ok := index.termIndex[termString]
@@ -189,7 +193,7 @@ func (reader *mockTermFieldReader) Next() (*index.TermFieldDoc, error) {
 		nextTermKey := reader.sortedDocIds[next]
 		nextTerm := reader.index[nextTermKey]
 		reader.curr = next
-		return &index.TermFieldDoc{ID: nextTermKey, Freq: nextTerm.freq, Norm: nextTerm.norm}, nil
+		return &index.TermFieldDoc{ID: nextTermKey, Freq: nextTerm.freq, Norm: nextTerm.norm, Vectors: nextTerm.vectors}, nil
 	}
 	return nil, nil
 }
@@ -205,7 +209,7 @@ func (reader *mockTermFieldReader) Advance(ID []byte) (*index.TermFieldDoc, erro
 	if reader.curr < len(reader.sortedDocIds) {
 		nextTermKey := reader.sortedDocIds[reader.curr]
 		nextTerm := reader.index[nextTermKey]
-		return &index.TermFieldDoc{ID: nextTermKey, Freq: nextTerm.freq, Norm: nextTerm.norm}, nil
+		return &index.TermFieldDoc{ID: nextTermKey, Freq: nextTerm.freq, Norm: nextTerm.norm, Vectors: nextTerm.vectors}, nil
 	}
 	return nil, nil
 }
@@ -215,3 +219,19 @@ func (reader *mockTermFieldReader) Count() uint64 {
 }
 
 func (reader *mockTermFieldReader) Close() {}
+
+func (mi *MockIndex) mockVectorsFromTokenFreq(field uint16, tf *analysis.TokenFreq) []*index.TermFieldVector {
+	rv := make([]*index.TermFieldVector, len(tf.Locations))
+
+	for i, l := range tf.Locations {
+		mv := index.TermFieldVector{
+			Field: mi.schema[field].Name,
+			Pos:   uint64(l.Position),
+			Start: uint64(l.Start),
+			End:   uint64(l.End),
+		}
+		rv[i] = &mv
+	}
+
+	return rv
+}

@@ -86,10 +86,11 @@ func NewVersionRowKV(key, value []byte) *VersionRow {
 // FIELD definition
 
 type FieldRow struct {
-	index    uint16
-	name     string
-	path     string
-	analyzer string
+	index              uint16
+	name               string
+	path               string
+	analyzer           string
+	includeTermVectors bool
 }
 
 func (f *FieldRow) Key() []byte {
@@ -127,27 +128,42 @@ func (f *FieldRow) Value() []byte {
 	if err != nil {
 		panic(fmt.Sprintf("Buffer.WriteString failed: %v", err))
 	}
+	err = buf.WriteByte(BYTE_SEPARATOR)
+	if err != nil {
+		panic(fmt.Sprintf("Buffer.WriteByte failed: %v", err))
+	}
+
+	var tvByte byte = 0
+	if f.includeTermVectors {
+		tvByte = 1
+	}
+	err = binary.Write(buf, binary.LittleEndian, tvByte)
+	if err != nil {
+		panic(fmt.Sprintf("binary.Write failed: %v", err))
+	}
 	return buf.Bytes()
 }
 
 func (f *FieldRow) Field() *index.Field {
 	return &index.Field{
-		Name:     f.name,
-		Path:     f.path,
-		Analyzer: f.analyzer,
+		Name:               f.name,
+		Path:               f.path,
+		Analyzer:           f.analyzer,
+		IncludeTermVectors: f.includeTermVectors,
 	}
 }
 
 func (f *FieldRow) String() string {
-	return fmt.Sprintf("Field: %d Name: %s Path: %s Analyzer: %s", f.index, f.name, f.path, f.analyzer)
+	return fmt.Sprintf("Field: %d Name: %s Path: %s Analyzer: %s IncludeTermVectors: %v", f.index, f.name, f.path, f.analyzer, f.includeTermVectors)
 }
 
-func NewFieldRow(index uint16, name, path, analyzer string) *FieldRow {
+func NewFieldRow(index uint16, name, path, analyzer string, includeTermVectors bool) *FieldRow {
 	return &FieldRow{
-		index:    index,
-		name:     name,
-		path:     path,
-		analyzer: analyzer,
+		index:              index,
+		name:               name,
+		path:               path,
+		analyzer:           analyzer,
+		includeTermVectors: includeTermVectors,
 	}
 }
 
@@ -173,20 +189,43 @@ func NewFieldRowKV(key, value []byte) *FieldRow {
 	}
 	rv.path = rv.path[:len(rv.path)-1] // trim off separator byte
 	rv.analyzer, err = buf.ReadString(BYTE_SEPARATOR)
-	if err != io.EOF {
-		panic(fmt.Sprintf("expected binary.ReadString to end in EOF: %v", err))
+	if err != nil {
+		panic(fmt.Sprintf("Buffer.ReadString failed: %v", err))
 	}
+	rv.analyzer = rv.analyzer[:len(rv.analyzer)-1] // trim off separator byte
+
+	var tvByte byte
+	err = binary.Read(buf, binary.LittleEndian, &tvByte)
+	if err != nil {
+		panic(fmt.Sprintf("binary.Read failed: %v", err))
+	}
+	if tvByte == 1 {
+		rv.includeTermVectors = true
+	}
+
 	return &rv
 }
 
 // TERM FIELD FREQUENCY
 
-type TermFrequencyRow struct {
-	term  []byte
+type TermVector struct {
 	field uint16
-	doc   []byte
-	freq  uint64
-	norm  float32
+	pos   uint64
+	start uint64
+	end   uint64
+}
+
+func (tv *TermVector) String() string {
+	return fmt.Sprintf("Field: %d Pos: %d Start: %d End %d", tv.field, tv.pos, tv.start, tv.end)
+}
+
+type TermFrequencyRow struct {
+	term    []byte
+	field   uint16
+	doc     []byte
+	freq    uint64
+	norm    float32
+	vectors []*TermVector
 }
 
 func (tfr *TermFrequencyRow) Key() []byte {
@@ -224,11 +263,29 @@ func (tfr *TermFrequencyRow) Value() []byte {
 	if err != nil {
 		panic(fmt.Sprintf("binary.Write failed: %v", err))
 	}
+	for _, vector := range tfr.vectors {
+		err = binary.Write(buf, binary.LittleEndian, vector.field)
+		if err != nil {
+			panic(fmt.Sprintf("binary.Write failed: %v", err))
+		}
+		err = binary.Write(buf, binary.LittleEndian, vector.pos)
+		if err != nil {
+			panic(fmt.Sprintf("binary.Write failed: %v", err))
+		}
+		err = binary.Write(buf, binary.LittleEndian, vector.start)
+		if err != nil {
+			panic(fmt.Sprintf("binary.Write failed: %v", err))
+		}
+		err = binary.Write(buf, binary.LittleEndian, vector.end)
+		if err != nil {
+			panic(fmt.Sprintf("binary.Write failed: %v", err))
+		}
+	}
 	return buf.Bytes()
 }
 
 func (tfr *TermFrequencyRow) String() string {
-	return fmt.Sprintf("Term: `%s` Field: %d DocId: `%s` Frequency: %d Norm: %f", string(tfr.term), tfr.field, string(tfr.doc), tfr.freq, tfr.norm)
+	return fmt.Sprintf("Term: `%s` Field: %d DocId: `%s` Frequency: %d Norm: %f Vectors: %v", string(tfr.term), tfr.field, string(tfr.doc), tfr.freq, tfr.norm, tfr.vectors)
 }
 
 func NewTermFrequencyRow(term []byte, field uint16, doc []byte, freq uint64, norm float32) *TermFrequencyRow {
@@ -238,6 +295,17 @@ func NewTermFrequencyRow(term []byte, field uint16, doc []byte, freq uint64, nor
 		doc:   doc,
 		freq:  freq,
 		norm:  norm,
+	}
+}
+
+func NewTermFrequencyRowWithTermVectors(term []byte, field uint16, doc []byte, freq uint64, norm float32, vectors []*TermVector) *TermFrequencyRow {
+	return &TermFrequencyRow{
+		term:    term,
+		field:   field,
+		doc:     doc,
+		freq:    freq,
+		norm:    norm,
+		vectors: vectors,
 	}
 }
 
@@ -271,6 +339,36 @@ func NewTermFrequencyRowKV(key, value []byte) *TermFrequencyRow {
 	err = binary.Read(buf, binary.LittleEndian, &rv.norm)
 	if err != nil {
 		panic(fmt.Sprintf("binary.Read failed: %v", err))
+	}
+
+	var field uint16
+	err = binary.Read(buf, binary.LittleEndian, &field)
+	if err != nil && err != io.EOF {
+		panic(fmt.Sprintf("binary.Read failed: %v", err))
+	}
+	for err != io.EOF {
+		tv := TermVector{}
+		tv.field = field
+		// at this point we expect at least one term vector
+		if rv.vectors == nil {
+			rv.vectors = make([]*TermVector, 0)
+		}
+
+		err = binary.Read(buf, binary.LittleEndian, &tv.pos)
+		if err != nil {
+			panic(fmt.Sprintf("binary.Read failed: %v", err))
+		}
+		err = binary.Read(buf, binary.LittleEndian, &tv.start)
+		if err != nil {
+			panic(fmt.Sprintf("binary.Read failed: %v", err))
+		}
+		err = binary.Read(buf, binary.LittleEndian, &tv.end)
+		if err != nil {
+			panic(fmt.Sprintf("binary.Read failed: %v", err))
+		}
+		rv.vectors = append(rv.vectors, &tv)
+		// try to read next record (may not exist)
+		err = binary.Read(buf, binary.LittleEndian, &field)
 	}
 
 	return &rv

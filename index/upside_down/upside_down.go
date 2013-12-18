@@ -57,7 +57,7 @@ func (udc *UpsideDownCouch) init() (err error) {
 
 	// schema
 	for i, field := range udc.schema {
-		row := NewFieldRow(uint16(i), field.Name, field.Path, field.Analyzer)
+		row := NewFieldRow(uint16(i), field.Name, field.Path, field.Analyzer, field.IncludeTermVectors)
 		rows = append(rows, row)
 
 		// instantiate the indexer for this field (if necessary)
@@ -299,7 +299,13 @@ func (udc *UpsideDownCouch) Update(key, doc []byte) error {
 		fieldNorm := float32(1.0 / math.Sqrt(float64(fieldLength)))
 		tokenFreqs := analysis.TokenFrequency(tokens)
 		for _, tf := range tokenFreqs {
-			termFreqRow := NewTermFrequencyRow(tf.Term, uint16(fieldIndex), key, tf.Freq, fieldNorm)
+			var termFreqRow *TermFrequencyRow
+			if field.IncludeTermVectors {
+				tv := termVectorsFromTokenFreq(uint16(fieldIndex), tf)
+				termFreqRow = NewTermFrequencyRowWithTermVectors(tf.Term, uint16(fieldIndex), key, uint64(frequencyFromTokenFreq(tf)), fieldNorm, tv)
+			} else {
+				termFreqRow = NewTermFrequencyRow(tf.Term, uint16(fieldIndex), key, uint64(frequencyFromTokenFreq(tf)), fieldNorm)
+			}
 
 			// record the back index entry
 			backIndexEntry := BackIndexEntry{tf.Term, uint16(fieldIndex)}
@@ -433,4 +439,39 @@ func defaultWriteOptions() *levigo.WriteOptions {
 func defaultReadOptions() *levigo.ReadOptions {
 	ro := levigo.NewReadOptions()
 	return ro
+}
+
+func frequencyFromTokenFreq(tf *analysis.TokenFreq) int {
+	return len(tf.Locations)
+}
+
+func termVectorsFromTokenFreq(field uint16, tf *analysis.TokenFreq) []*TermVector {
+	rv := make([]*TermVector, len(tf.Locations))
+
+	for i, l := range tf.Locations {
+		tv := TermVector{
+			field: field,
+			pos:   uint64(l.Position),
+			start: uint64(l.Start),
+			end:   uint64(l.End),
+		}
+		rv[i] = &tv
+	}
+
+	return rv
+}
+
+func (udc *UpsideDownCouch) termFieldVectorsFromTermVectors(in []*TermVector) []*index.TermFieldVector {
+	rv := make([]*index.TermFieldVector, len(in))
+
+	for i, tv := range in {
+		tfv := index.TermFieldVector{
+			Field: udc.schema[tv.field].Name,
+			Pos:   tv.pos,
+			Start: tv.start,
+			End:   tv.end,
+		}
+		rv[i] = &tfv
+	}
+	return rv
 }

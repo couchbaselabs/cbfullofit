@@ -10,6 +10,7 @@ package upside_down
 
 import (
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/couchbaselabs/cbfullofit/index"
@@ -23,6 +24,12 @@ func TestIndexReader(t *testing.T) {
 			Name:     "name",
 			Path:     "/name",
 			Analyzer: "standard",
+		},
+		&index.Field{
+			Name:               "desc",
+			Path:               "/description",
+			Analyzer:           "standard",
+			IncludeTermVectors: true,
 		},
 	}
 	idx := NewUpsideDownCouch("test", schema)
@@ -41,7 +48,7 @@ func TestIndexReader(t *testing.T) {
 	}
 	expectedCount += 1
 
-	doc = []byte(`{"name": "test test test"}`)
+	doc = []byte(`{"name": "test test test", "description": "eat more rice"}`)
 	err = idx.Update([]byte{'2'}, doc)
 	if err != nil {
 		t.Errorf("Error updating index: %v", err)
@@ -83,5 +90,30 @@ func TestIndexReader(t *testing.T) {
 	}
 	if actualCount != count {
 		t.Errorf("count was 2, but only saw %d", actualCount)
+	}
+
+	expectedMatch := &index.TermFieldDoc{
+		ID:   "2",
+		Freq: 1,
+		Norm: 0.5773502588272095,
+		Vectors: []*index.TermFieldVector{
+			&index.TermFieldVector{
+				Field: "desc",
+				Pos:   3,
+				Start: 11,
+				End:   15,
+			},
+		},
+	}
+	tfr, err := idx.TermFieldReader([]byte("rice"), "desc")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	match, err = tfr.Next()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(expectedMatch, match) {
+		t.Errorf("got %#v, expected %#v", match, expectedMatch)
 	}
 }

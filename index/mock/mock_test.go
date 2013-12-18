@@ -24,9 +24,10 @@ func TestCRUD(t *testing.T) {
 			Analyzer: "standard",
 		},
 		&index.Field{
-			Name:     "desc",
-			Path:     "/description",
-			Analyzer: "standard",
+			Name:               "desc",
+			Path:               "/description",
+			Analyzer:           "standard",
+			IncludeTermVectors: true,
 		},
 	}
 	i := NewMockIndex(schema)
@@ -71,7 +72,7 @@ func TestCRUD(t *testing.T) {
 	}
 
 	// update doc, assert doc count doesn't go up
-	i.Update([]byte("1"), []byte(`{"name": "salad"}`))
+	i.Update([]byte("1"), []byte(`{"name": "salad","description": "eat more rice"}`))
 	count = i.DocCount()
 	if count != 2 {
 		t.Errorf("expected document count to be 2, was: %d", count)
@@ -99,5 +100,30 @@ func TestCRUD(t *testing.T) {
 	count = i.DocCount()
 	if count != 1 {
 		t.Errorf("expected document count to be 1, was: %d", count)
+	}
+
+	expectedMatch = &index.TermFieldDoc{
+		ID:   "1",
+		Freq: 1,
+		Norm: 0.5773502691896258,
+		Vectors: []*index.TermFieldVector{
+			&index.TermFieldVector{
+				Field: "desc",
+				Pos:   3,
+				Start: 11,
+				End:   15,
+			},
+		},
+	}
+	tfr, err = i.TermFieldReader([]byte("rice"), "desc")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	match, err = tfr.Next()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(expectedMatch, match) {
+		t.Errorf("got %#v, expected %#v", match, expectedMatch)
 	}
 }

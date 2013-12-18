@@ -8,9 +8,15 @@
 //  and limitations under the License.
 package analysis
 
+type TokenLocation struct {
+	Start    int
+	End      int
+	Position int
+}
+
 type TokenFreq struct {
-	Term []byte
-	Freq uint64
+	Term      []byte
+	Locations []*TokenLocation
 }
 
 func TokenFrequency(tokens TokenStream) []*TokenFreq {
@@ -19,9 +25,22 @@ func TokenFrequency(tokens TokenStream) []*TokenFreq {
 	for _, token := range tokens {
 		curr, ok := index[string(token.Term)]
 		if ok {
-			curr.Freq = curr.Freq + 1
+			curr.Locations = append(curr.Locations, &TokenLocation{
+				Start:    token.Start,
+				End:      token.End,
+				Position: token.Position,
+			})
 		} else {
-			index[string(token.Term)] = &TokenFreq{token.Term, 1}
+			index[string(token.Term)] = &TokenFreq{
+				Term: token.Term,
+				Locations: []*TokenLocation{
+					&TokenLocation{
+						Start:    token.Start,
+						End:      token.End,
+						Position: token.Position,
+					},
+				},
+			}
 		}
 	}
 

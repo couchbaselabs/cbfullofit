@@ -25,25 +25,20 @@ func TestRows(t *testing.T) {
 			[]byte{0x1},
 		},
 		{
-			NewFieldRow(0, "name", "/name", "standard"),
+			NewFieldRow(0, "name", "/name", "standard", false),
 			[]byte{'f', 0, 0},
-			[]byte{'n', 'a', 'm', 'e', BYTE_SEPARATOR, '/', 'n', 'a', 'm', 'e', BYTE_SEPARATOR, 's', 't', 'a', 'n', 'd', 'a', 'r', 'd'},
+			[]byte{'n', 'a', 'm', 'e', BYTE_SEPARATOR, '/', 'n', 'a', 'm', 'e', BYTE_SEPARATOR, 's', 't', 'a', 'n', 'd', 'a', 'r', 'd', BYTE_SEPARATOR, 0},
 		},
 		{
-			NewFieldRow(1, "desc", "/description", "standard"),
+			NewFieldRow(1, "desc", "/description", "standard", true),
 			[]byte{'f', 1, 0},
-			[]byte{'d', 'e', 's', 'c', BYTE_SEPARATOR, '/', 'd', 'e', 's', 'c', 'r', 'i', 'p', 't', 'i', 'o', 'n', BYTE_SEPARATOR, 's', 't', 'a', 'n', 'd', 'a', 'r', 'd'},
+			[]byte{'d', 'e', 's', 'c', BYTE_SEPARATOR, '/', 'd', 'e', 's', 'c', 'r', 'i', 'p', 't', 'i', 'o', 'n', BYTE_SEPARATOR, 's', 't', 'a', 'n', 'd', 'a', 'r', 'd', BYTE_SEPARATOR, 1},
 		},
 		{
-			NewFieldRow(513, "style", "/style", "keyword"),
+			NewFieldRow(513, "style", "/style", "keyword", false),
 			[]byte{'f', 1, 2},
-			[]byte{'s', 't', 'y', 'l', 'e', BYTE_SEPARATOR, '/', 's', 't', 'y', 'l', 'e', BYTE_SEPARATOR, 'k', 'e', 'y', 'w', 'o', 'r', 'd'},
+			[]byte{'s', 't', 'y', 'l', 'e', BYTE_SEPARATOR, '/', 's', 't', 'y', 'l', 'e', BYTE_SEPARATOR, 'k', 'e', 'y', 'w', 'o', 'r', 'd', BYTE_SEPARATOR, 0},
 		},
-		// {
-		// 	NewInverseFrequencyRow([]byte{'b', 'e', 'e', 'r'}, 0, 27),
-		// 	[]byte{'i', 'b', 'e', 'e', 'r', BYTE_SEPARATOR, 0, 0},
-		// 	[]byte{27, 0, 0, 0, 0, 0, 0, 0},
-		// },
 		{
 			NewTermFrequencyRow([]byte{'b', 'e', 'e', 'r'}, 0, nil, 3, 3.14),
 			[]byte{'t', 'b', 'e', 'e', 'r', BYTE_SEPARATOR, 0, 0},
@@ -54,11 +49,11 @@ func TestRows(t *testing.T) {
 			[]byte{'t', 'b', 'e', 'e', 'r', BYTE_SEPARATOR, 0, 0, 'b', 'u', 'd', 'w', 'e', 'i', 's', 'e', 'r'},
 			[]byte{3, 0, 0, 0, 0, 0, 0, 0, 195, 245, 72, 64},
 		},
-		// {
-		// 	NewNormalizationRow(0, []byte{'b', 'u', 'd', 'w', 'e', 'i', 's', 'e', 'r'}, 3.14),
-		// 	[]byte{'n', 0x0, 0x0, 'b', 'u', 'd', 'w', 'e', 'i', 's', 'e', 'r'},
-		// 	[]byte{195, 245, 72, 64},
-		// },
+		{
+			NewTermFrequencyRowWithTermVectors([]byte{'b', 'e', 'e', 'r'}, 0, []byte{'b', 'u', 'd', 'w', 'e', 'i', 's', 'e', 'r'}, 3, 3.14, []*TermVector{&TermVector{field: 0, pos: 1, start: 3, end: 11}, &TermVector{field: 0, pos: 2, start: 23, end: 31}, &TermVector{field: 0, pos: 3, start: 43, end: 51}}),
+			[]byte{'t', 'b', 'e', 'e', 'r', BYTE_SEPARATOR, 0, 0, 'b', 'u', 'd', 'w', 'e', 'i', 's', 'e', 'r'},
+			[]byte{3, 0, 0, 0, 0, 0, 0, 0, 195, 245, 72, 64, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0},
+		},
 		{
 			NewBackIndexRow([]byte{'b', 'u', 'd', 'w', 'e', 'i', 's', 'e', 'r'}, []*BackIndexEntry{&BackIndexEntry{[]byte{'b', 'e', 'e', 'r'}, 0}}),
 			[]byte{'b', 'b', 'u', 'd', 'w', 'e', 'i', 's', 'e', 'r'},
