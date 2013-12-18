@@ -12,6 +12,7 @@ import (
 	"github.com/couchbaselabs/cbfullofit/analysis"
 	"github.com/couchbaselabs/cbfullofit/analysis/filters/lower_case_filter"
 	"github.com/couchbaselabs/cbfullofit/analysis/filters/stop_words_filter"
+	"github.com/couchbaselabs/cbfullofit/analysis/sanitizer/json_string_sanitizer"
 	"github.com/couchbaselabs/cbfullofit/analysis/tokenizers/unicode_word_boundary"
 )
 
@@ -27,6 +28,7 @@ func NewStandardAnalyzer() (*analysis.Analyzer, error) {
 	}
 
 	standard := analysis.Analyzer{
+		Sanitizer: json_string_sanitizer.NewJsonStringSanitizer(),
 		Tokenizer: unicode_word_boundary.NewUnicodeWordBoundaryTokenizer(),
 		Filters: []analysis.TokenFilter{
 			lower_case_filter,
