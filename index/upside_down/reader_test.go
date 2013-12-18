@@ -100,8 +100,8 @@ func TestIndexReader(t *testing.T) {
 			&index.TermFieldVector{
 				Field: "desc",
 				Pos:   3,
-				Start: 11,
-				End:   15,
+				Start: 9,
+				End:   13,
 			},
 		},
 	}
