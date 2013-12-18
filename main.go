@@ -22,6 +22,7 @@ import (
 
 	"github.com/nu7hatch/gouuid"
 
+	_ "github.com/couchbaselabs/cbfullofit/analysis/analyzers/keyword_analyzer"
 	_ "github.com/couchbaselabs/cbfullofit/analysis/analyzers/standard_analyzer"
 )
 

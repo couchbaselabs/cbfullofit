@@ -14,6 +14,7 @@ import (
 
 	"github.com/couchbaselabs/cbfullofit/index/upside_down"
 
+	_ "github.com/couchbaselabs/cbfullofit/analysis/analyzers/keyword_analyzer"
 	_ "github.com/couchbaselabs/cbfullofit/analysis/analyzers/standard_analyzer"
 )
 
